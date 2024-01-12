@@ -23,7 +23,7 @@
 					}
 				}
 			},
-			"Shared": {
+			"DoorSystemModules": {
 				"$path": "out/shared"
 			}
 		},
