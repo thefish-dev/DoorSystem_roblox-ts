@@ -3,8 +3,10 @@
 const Constants = {
     // Default attributes
     DEFAULT_AUTOCLOSE: true,
+    DEFAULT_CLOSURE_DELAY: 3,
     DEFAULT_ACCESS_LEVEL: -1,
     DEFAULT_LOCKDOWN_BYPASS_LEVEL: 6,
+    LOCKDOWN_BUTTON_ACCESS_LEVEL: 6,
     DEFAULT_HID: "Button",
     DEFAULT_DOOR_TYPE: "Standard",
 

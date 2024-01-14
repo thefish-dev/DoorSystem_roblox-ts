@@ -26,6 +26,26 @@ local function getHIDAttachments(instance)
 	end
 	return hids
 end
+local function getPlayerAccess(player)
+	local permission = Constants.DEFAULT_ACCESS_LEVEL
+	local _result = player:FindFirstChild("Backpack")
+	if _result ~= nil then
+		local _exp = _result:GetChildren()
+		local _arg0 = function(card)
+			if not CollectionService:HasTag(card, Constants.CARD_TAG) then
+				return nil
+			end
+			local access = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL)
+			if access > permission then
+				permission = access
+			end
+		end
+		for _k, _v in _exp do
+			_arg0(_v, _k - 1, _exp)
+		end
+	end
+	return permission
+end
 -- Creates scanners at HID attachments, returns an event that fires when that HID is activated
 local function createScanners(door)
 	local event = Instance.new("BindableEvent")
@@ -75,10 +95,10 @@ local function createScanners(door)
 	end
 	return event.Event
 end
--- Creates scanners at HID attachments, returns an event that fires when that HID is activated
-local function createButtons(door)
+-- Creates buttons at HID attachments, returns an event that fires when that HID is activated
+local function createButtons(model, accessLevel)
 	local event = Instance.new("BindableEvent")
-	local _exp = getHIDAttachments(door:getModel())
+	local _exp = getHIDAttachments(model)
 	local _arg0 = function(hid)
 		local _result = HID_Devices
 		if _result ~= nil then
@@ -89,7 +109,7 @@ local function createButtons(door)
 		end
 		local buttonClone = _result
 		buttonClone:PivotTo(hid.WorldCFrame)
-		buttonClone.Parent = door:getModel()
+		buttonClone.Parent = model
 		local debounce = true
 		local clickDetector = buttonClone:FindFirstChild("ClickDetector")
 		local _result_1 = clickDetector
@@ -99,30 +119,13 @@ local function createButtons(door)
 					return nil
 				end
 				debounce = false
-				local doorPermission = door.accessLevel
-				local permission = Constants.DEFAULT_ACCESS_LEVEL
-				local _result_2 = player:FindFirstChild("Backpack")
-				if _result_2 ~= nil then
-					local _exp_1 = _result_2:GetChildren()
-					local _arg0_1 = function(card)
-						if not CollectionService:HasTag(card, Constants.CARD_TAG) then
-							return nil
-						end
-						local access = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL)
-						if access > permission then
-							permission = access
-						end
-					end
-					for _k, _v in _exp_1 do
-						_arg0_1(_v, _k - 1, _exp_1)
-					end
-				end
 				local sound = buttonClone:FindFirstChild("Push")
-				local _result_3 = sound
-				if _result_3 ~= nil then
-					_result_3:Play()
+				local _result_2 = sound
+				if _result_2 ~= nil then
+					_result_2:Play()
 				end
-				if permission >= doorPermission then
+				local permission = getPlayerAccess(player)
+				if permission >= accessLevel then
 					event:Fire()
 				end
 				task.wait(1)

@@ -21,6 +21,18 @@ function getHIDAttachments(instance: Instance): Attachment[] {
     return hids;
 }
 
+function getPlayerAccess(player: Player): number {
+    let permission = Constants.DEFAULT_ACCESS_LEVEL;
+    
+    player.FindFirstChild("Backpack")?.GetChildren().forEach(card => {
+        if (!CollectionService.HasTag(card, Constants.CARD_TAG)) return;
+        const access = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL);
+        if (access > permission) permission = access;
+    });
+
+    return permission;
+}
+
 // Creates scanners at HID attachments, returns an event that fires when that HID is activated
 export function createScanners(door: DoorClass): RBXScriptSignal {
     const event = new Instance("BindableEvent");
@@ -58,14 +70,14 @@ export function createScanners(door: DoorClass): RBXScriptSignal {
 }
 
 
-// Creates scanners at HID attachments, returns an event that fires when that HID is activated
-export function createButtons(door: DoorClass): RBXScriptSignal {
+// Creates buttons at HID attachments, returns an event that fires when that HID is activated
+export function createButtons(model: Instance, accessLevel: number): RBXScriptSignal {
     const event = new Instance("BindableEvent");
 
-    getHIDAttachments(door.getModel()).forEach(hid => {
+    getHIDAttachments(model).forEach(hid => {
         const buttonClone = HID_Devices?.FindFirstChild("Button")?.Clone() as BasePart;
         buttonClone.PivotTo(hid.WorldCFrame);
-        buttonClone.Parent = door.getModel();
+        buttonClone.Parent = model;
 
         let debounce = true;
         const clickDetector = buttonClone.FindFirstChild("ClickDetector") as ClickDetector;
@@ -74,18 +86,11 @@ export function createButtons(door: DoorClass): RBXScriptSignal {
 
             debounce = false;
 
-            const doorPermission = door.accessLevel;
-            let permission = Constants.DEFAULT_ACCESS_LEVEL;
-            player.FindFirstChild("Backpack")?.GetChildren().forEach(card => {
-                if (!CollectionService.HasTag(card, Constants.CARD_TAG)) return;
-                const access = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL);
-                if (access > permission) permission = access;
-            })
-
             const sound = buttonClone.FindFirstChild("Push") as Sound;
             sound?.Play();
 
-            if (permission >= doorPermission) event.Fire();
+            const permission = getPlayerAccess(player);
+            if (permission >= accessLevel) event.Fire();
 
             task.wait(1);
             debounce = true;
