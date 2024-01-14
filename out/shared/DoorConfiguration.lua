@@ -5,9 +5,10 @@ local Constants = {
 	DEFAULT_ACCESS_LEVEL = -1,
 	DEFAULT_LOCKDOWN_BYPASS_LEVEL = 6,
 	DEFAULT_HID = "Button",
-	CARD_TAG = "Card",
-	DOOR_TAG = "Door",
-	LOCKDOWN_BUTTON_TAG = "LockdownButton",
+	DEFAULT_DOOR_TYPE = "Standard",
+	CARD_TAG = "DoorSystem_Card",
+	DOOR_TAG = "DoorSystem_Door",
+	LOCKDOWN_BUTTON_TAG = "DoorSystem_LockdownButton",
 }
 local default = Constants
 return {

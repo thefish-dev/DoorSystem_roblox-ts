@@ -6,11 +6,12 @@ const Constants = {
     DEFAULT_ACCESS_LEVEL: -1,
     DEFAULT_LOCKDOWN_BYPASS_LEVEL: 6,
     DEFAULT_HID: "Button",
+    DEFAULT_DOOR_TYPE: "Standard",
 
     // Component tags
-    CARD_TAG: "Card",
-    DOOR_TAG: "Door",
-    LOCKDOWN_BUTTON_TAG: "LockdownButton"
+    CARD_TAG: "DoorSystem_Card",
+    DOOR_TAG: "DoorSystem_Door",
+    LOCKDOWN_BUTTON_TAG: "DoorSystem_LockdownButton"
 };
 
 export default Constants;
