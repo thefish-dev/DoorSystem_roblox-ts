@@ -26,26 +26,6 @@ local function getHIDAttachments(instance)
 	end
 	return hids
 end
-local function getPlayerAccess(player)
-	local permission = Constants.DEFAULT_ACCESS_LEVEL
-	local _result = player:FindFirstChild("Backpack")
-	if _result ~= nil then
-		local _exp = _result:GetChildren()
-		local _arg0 = function(card)
-			if not CollectionService:HasTag(card, Constants.CARD_TAG) then
-				return nil
-			end
-			local access = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL)
-			if access > permission then
-				permission = access
-			end
-		end
-		for _k, _v in _exp do
-			_arg0(_v, _k - 1, _exp)
-		end
-	end
-	return permission
-end
 -- Creates scanners at HID attachments, returns an event that fires when that HID is activated
 local function createScanners(door)
 	local event = Instance.new("BindableEvent")
@@ -71,8 +51,9 @@ local function createScanners(door)
 			end
 			debounce = false
 			local permission = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL)
+			local isLocked = permission < door.lockBypassLevel and door:isLocked()
 			local doorPermission = door.accessLevel
-			if permission < doorPermission then
+			if permission < doorPermission or (door:isRunning() or isLocked) then
 				local sound = scannerClone:FindFirstChild("KeycardDenied")
 				local _result_1 = sound
 				if _result_1 ~= nil then
@@ -96,7 +77,7 @@ local function createScanners(door)
 	return event.Event
 end
 -- Creates buttons at HID attachments, returns an event that fires when that HID is activated
-local function createButtons(model, accessLevel)
+local function createButtons(model)
 	local event = Instance.new("BindableEvent")
 	local _exp = getHIDAttachments(model)
 	local _arg0 = function(hid)
@@ -124,10 +105,7 @@ local function createButtons(model, accessLevel)
 				if _result_2 ~= nil then
 					_result_2:Play()
 				end
-				local permission = getPlayerAccess(player)
-				if permission >= accessLevel then
-					event:Fire()
-				end
+				event:Fire(player)
 				task.wait(1)
 				debounce = true
 			end)

@@ -14,24 +14,14 @@ function getHIDAttachments(instance: Instance): Attachment[] {
 
     instance.GetDescendants().forEach(att => {
         if (!att.IsA("Attachment") || att.Name !== "HIDAtt") return;
-        
+
         hids.insert(hids.size(), att);
     });
 
     return hids;
 }
 
-function getPlayerAccess(player: Player): number {
-    let permission = Constants.DEFAULT_ACCESS_LEVEL;
-    
-    player.FindFirstChild("Backpack")?.GetChildren().forEach(card => {
-        if (!CollectionService.HasTag(card, Constants.CARD_TAG)) return;
-        const access = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL);
-        if (access > permission) permission = access;
-    });
 
-    return permission;
-}
 
 // Creates scanners at HID attachments, returns an event that fires when that HID is activated
 export function createScanners(door: DoorClass): RBXScriptSignal {
@@ -50,9 +40,10 @@ export function createScanners(door: DoorClass): RBXScriptSignal {
             debounce = false;
 
             const permission = GetAttribute(card, "Permission", Constants.DEFAULT_ACCESS_LEVEL);
+            const isLocked: Boolean = permission < door.lockBypassLevel && door.isLocked();
             const doorPermission = door.accessLevel;
 
-            if (permission < doorPermission) {
+            if (permission < doorPermission || door.isRunning() || isLocked) {
                 const sound = scannerClone.FindFirstChild("KeycardDenied") as Sound;
                 sound?.Play();
             } else {
@@ -71,7 +62,7 @@ export function createScanners(door: DoorClass): RBXScriptSignal {
 
 
 // Creates buttons at HID attachments, returns an event that fires when that HID is activated
-export function createButtons(model: Instance, accessLevel: number): RBXScriptSignal {
+export function createButtons(model: Instance): RBXScriptSignal {
     const event = new Instance("BindableEvent");
 
     getHIDAttachments(model).forEach(hid => {
@@ -89,8 +80,7 @@ export function createButtons(model: Instance, accessLevel: number): RBXScriptSi
             const sound = buttonClone.FindFirstChild("Push") as Sound;
             sound?.Play();
 
-            const permission = getPlayerAccess(player);
-            if (permission >= accessLevel) event.Fire();
+            event.Fire(player);
 
             task.wait(1);
             debounce = true;

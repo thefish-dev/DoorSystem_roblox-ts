@@ -4,17 +4,42 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local CollectionService = TS.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "services").CollectionService
 local DoorClass = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorClass")
 local Constants = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorConfiguration").default
+local GetAttribute = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "GetAttribute").GetAttribute
 local _HIDOperation = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "HIDOperation")
 local createButtons = _HIDOperation.createButtons
 local createScanners = _HIDOperation.createScanners
 -- Variables
 local lockdown = false
 local doors = {}
+-- Function
+local function getPlayerAccess(player)
+	local permission = Constants.DEFAULT_ACCESS_LEVEL
+	local backpack = player:FindFirstChild("Backpack")
+	for _, card in backpack:GetChildren() do
+		local handle = card:FindFirstChild("Handle")
+		if handle == nil then
+			continue
+		end
+		if not CollectionService:HasTag(handle, Constants.CARD_TAG) then
+			continue
+		end
+		local access = GetAttribute(handle, "Permission", Constants.DEFAULT_ACCESS_LEVEL)
+		if access > permission then
+			permission = access
+		end
+	end
+	return permission
+end
 -- Lockdown button
 local _exp = CollectionService:GetTagged(Constants.LOCKDOWN_BUTTON_TAG)
 local _arg0 = function(button)
-	createButtons(button, Constants.LOCKDOWN_BUTTON_ACCESS_LEVEL):Connect(function()
+	createButtons(button):Connect(function(player)
+		local permission = getPlayerAccess(player)
+		if permission < Constants.LOCKDOWN_BUTTON_ACCESS_LEVEL then
+			return nil
+		end
 		lockdown = not lockdown
+		print("Lockdown: " .. tostring(lockdown))
 		if lockdown then
 			local _arg0_1 = function(door)
 				return door:lock()
@@ -53,8 +78,13 @@ local _arg0_1 = function(door)
 			end
 		end)
 	else
-		createButtons(doorClass:getModel(), doorClass.accessLevel):Connect(function()
+		createButtons(doorClass:getModel()):Connect(function(player)
 			if doorClass:isRunning() then
+				return nil
+			end
+			local permission = getPlayerAccess(player)
+			local isLocked = permission < doorClass.lockBypassLevel and doorClass:isLocked()
+			if permission < doorClass.accessLevel or isLocked then
 				return nil
 			end
 			if doorClass:isClosed() then

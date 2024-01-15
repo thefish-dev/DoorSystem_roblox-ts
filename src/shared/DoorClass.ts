@@ -8,11 +8,11 @@ interface TweenTable {
 	[doorName: string]: Tween
 }
 interface DoorModule {
-    OpenDoor(model: Model): Tween;
+	OpenDoor(model: Model): Tween;
 	CloseDoor(model: Model): Tween;
 }
 // Variables
-const DoorTweens: TweenTable = {}
+const DoorTweens: Map<Instance, Tween> = new Map();
 
 class DoorClass {
 	// Public Attributes
@@ -28,13 +28,13 @@ class DoorClass {
 	private _model: Model;
 	private _closed: Boolean;
 	private _debounce: Boolean;
-	
+
 	// Constructor
 	constructor(model: Model) {
 		this._model = model;
 		this.autoClose = GetAttribute(this._model, "AutoClose", Constants.DEFAULT_AUTOCLOSE);
 		this.accessLevel = GetAttribute(this._model, "AccessLevel", Constants.DEFAULT_ACCESS_LEVEL);
-		this.lockBypassLevel = GetAttribute(this._model, "LockBypassLevel", Constants.DEFAULT_ACCESS_LEVEL);
+		this.lockBypassLevel = GetAttribute(this._model, "LockBypassLevel", Constants.DEFAULT_LOCKDOWN_BYPASS_LEVEL);
 		this.closureDelay = GetAttribute(this._model, "ClosureDelay", Constants.DEFAULT_CLOSURE_DELAY);
 
 		this._hid = GetAttribute(this._model, "HID", Constants.DEFAULT_HID);
@@ -43,20 +43,20 @@ class DoorClass {
 		this._closed = true;
 		this._debounce = true;
 	}
-	
+
 	// Private methods
 	private getModule(): ModuleScript {
 		const module = ReplicatedStorage.FindFirstChild("DoorSystem")?.FindFirstChild("DoorTypes")?.FindFirstChild(this._doorType) as ModuleScript;
-		assert(module, `No type ${this._doorType} was found in door ${this._model.GetFullName()}`);
+		assert(module, `No type ${this._doorType} from door ${this._model.GetFullName()} was found in DoorTypes.`);
 		return module;
 	}
-	
+
 	private saveTween(tween: Tween): void {
-		DoorTweens[this._model.GetFullName()] = tween;
+		DoorTweens.set(this._model, tween);
 	}
 
 	private clearTween(): void {
-		delete DoorTweens[this._model.GetFullName()];
+		DoorTweens.delete(this._model);
 	}
 
 	// Informative methods
@@ -77,9 +77,8 @@ class DoorClass {
 	}
 
 	isRunning(): Boolean {
-		const tween = DoorTweens[this._model.GetFullName()];
-		if (!this._debounce || tween === undefined) return false;
-		return tween.PlaybackState === Enum.PlaybackState.Playing;
+		const tween = DoorTweens.get(this._model);
+		return (!this._debounce || tween !== undefined);
 	}
 
 	// Customization methods
@@ -93,9 +92,14 @@ class DoorClass {
 
 	// Action methods
 	open(): void {
-        const doorModule = require(this.getModule()) as DoorModule;
-		const openDoor = doorModule.OpenDoor;
-		const tween = openDoor(this._model);
+		if (!this._closed) {
+			this._debounce = true;
+			this.clearTween();
+			return
+		};
+
+		const doorModule = require(this.getModule()) as DoorModule;
+		const tween = doorModule.OpenDoor(this._model);
 		assert(tween, `Couldn't get the Opening tween animation of door ${this._model.GetFullName()}`)
 
 		this.saveTween(tween);
@@ -112,11 +116,16 @@ class DoorClass {
 			}
 		});
 	}
-	
+
 	close(): void {
-        const doorModule = require(this.getModule()) as DoorModule;
-		const closeDoor = doorModule.CloseDoor;
-		const tween = closeDoor(this._model);
+		if (this._closed) {
+			this._debounce = true;
+			this.clearTween();
+			return
+		};
+
+		const doorModule = require(this.getModule()) as DoorModule;
+		const tween = doorModule.CloseDoor(this._model);
 		assert(tween, `Couldn't get the Closing tween animation of door ${this._model.GetFullName()}`)
 
 		this.saveTween(tween);
@@ -133,7 +142,7 @@ class DoorClass {
 		this._locked = true;
 		if (!this._closed) this.close();
 	}
-	
+
 	unlock(): void {
 		this._locked = false;
 	}
