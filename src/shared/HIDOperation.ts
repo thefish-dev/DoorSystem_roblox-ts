@@ -21,7 +21,6 @@ function getHIDAttachments(instance: Instance): Attachment[] {
     return hids;
 }
 
-
 // Creates scanners at HID attachments, returns an event that fires when that HID is activated
 export function createScanners(door: DoorClass): RBXScriptSignal {
     const event = new Instance("BindableEvent");
