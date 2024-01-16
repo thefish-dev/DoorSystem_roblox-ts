@@ -1,10 +1,12 @@
 /* eslint-disable prettier/prettier */
 import { TweenService } from "@rbxts/services";
 
+
 // Constants
 const ANIMATION_TIME = 1.5;
 const EASING_STYLE = Enum.EasingStyle.Linear;
 const EASING_DIRECTION = Enum.EasingDirection.InOut;
+
 
 // Variables
 const tweenInfo = new TweenInfo(ANIMATION_TIME, EASING_STYLE, EASING_DIRECTION);
@@ -25,8 +27,9 @@ function getSavedCFrame(part: BasePart): CFrame {
     return storedCFrames.get(part) as CFrame;
 }
 
+
 // Exports
-export function OpenDoor(_: unknown, model: Model): Tween {
+export function OpenDoor(_: unknown, model: Model): Tween { // first parameter '_' is needed because roblox-ts' compiler places a ':' instead of '.' when calling the function
     const door1 = model.FindFirstChild("Door1") as BasePart;
     const door2 = model.FindFirstChild("Door2") as BasePart;
 
@@ -50,6 +53,7 @@ export function OpenDoor(_: unknown, model: Model): Tween {
     tween1.Play();
     tween2.Play();
 
+    // Returns tween1 to keep track of the door animation
     return tween1;
 }
 export function CloseDoor(_: unknown, model: Model): Tween {

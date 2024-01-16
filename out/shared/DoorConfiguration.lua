@@ -1,5 +1,6 @@
 -- Compiled with roblox-ts v2.2.0
 -- eslint-disable prettier/prettier 
+-- Door system configuration, fully customizable values without the need of editing any script
 local Constants = {
 	DEFAULT_AUTOCLOSE = true,
 	DEFAULT_CLOSURE_DELAY = 3,
@@ -12,7 +13,6 @@ local Constants = {
 	DOOR_TAG = "DoorSystem_Door",
 	LOCKDOWN_BUTTON_TAG = "DoorSystem_LockdownButton",
 }
-local default = Constants
 return {
-	default = default,
+	Constants = Constants,
 }

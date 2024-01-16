@@ -1,20 +1,20 @@
 /* eslint-disable prettier/prettier */
 import { ReplicatedStorage } from "@rbxts/services";
 import { GetAttribute } from 'shared/GetAttribute';
-import Constants from "shared/DoorConfiguration";
+import { Constants } from "shared/DoorConfiguration";
 
-// Interfaces
-interface TweenTable {
-	[doorName: string]: Tween
-}
+
+// Variables
+const DoorTweens: Map<Instance, Tween> = new Map();
+
 interface DoorModule {
 	OpenDoor(model: Model): Tween;
 	CloseDoor(model: Model): Tween;
 }
-// Variables
-const DoorTweens: Map<Instance, Tween> = new Map();
 
-class DoorClass {
+
+// Main class
+export class DoorClass {
 	// Public Attributes
 	public autoClose: Boolean;
 	public accessLevel: number;
@@ -31,7 +31,7 @@ class DoorClass {
 
 	// Constructor
 	constructor(model: Model) {
-		this._model = model;
+		this._model = model; // GetAttribute(instance, attribute, default) is a custom function to get a default value when attribute is not found
 		this.autoClose = GetAttribute(this._model, "AutoClose", Constants.DEFAULT_AUTOCLOSE);
 		this.accessLevel = GetAttribute(this._model, "AccessLevel", Constants.DEFAULT_ACCESS_LEVEL);
 		this.lockBypassLevel = GetAttribute(this._model, "LockBypassLevel", Constants.DEFAULT_LOCKDOWN_BYPASS_LEVEL);
@@ -45,12 +45,14 @@ class DoorClass {
 	}
 
 	// Private methods
+	// method to import a DoorType
 	private getModule(): ModuleScript {
 		const module = ReplicatedStorage.FindFirstChild("DoorSystem")?.FindFirstChild("DoorTypes")?.FindFirstChild(this._doorType) as ModuleScript;
 		assert(module, `No type ${this._doorType} from door ${this._model.GetFullName()} was found in DoorTypes.`);
 		return module;
 	}
 
+	// Saves tween in a map to keep track of door's state
 	private saveTween(tween: Tween): void {
 		DoorTweens.set(this._model, tween);
 	}
@@ -92,12 +94,13 @@ class DoorClass {
 
 	// Action methods
 	open(): void {
-		if (!this._closed) {
+		if (!this._closed) { // additional security to make sure the door isn't somehow already open
 			this._debounce = true;
 			this.clearTween();
 			return
 		};
 
+		// Imports the DoorType module and starts opening tweens.
 		const doorModule = require(this.getModule()) as DoorModule;
 		const tween = doorModule.OpenDoor(this._model);
 		assert(tween, `Couldn't get the Opening tween animation of door ${this._model.GetFullName()}`)
@@ -106,7 +109,7 @@ class DoorClass {
 		this._debounce = false
 		this._closed = false;
 
-		tween.Completed.Once(() => {
+		tween.Completed.Once(() => { // when door is fully open
 			if (this.autoClose) {
 				task.wait(this.closureDelay);
 				this.close();
@@ -118,12 +121,13 @@ class DoorClass {
 	}
 
 	close(): void {
-		if (this._closed) {
+		if (this._closed) { // additional security to make sure the door isn't somehow already closed
 			this._debounce = true;
 			this.clearTween();
 			return
 		};
 
+		// Imports the DoorType module and starts closing tweens.
 		const doorModule = require(this.getModule()) as DoorModule;
 		const tween = doorModule.CloseDoor(this._model);
 		assert(tween, `Couldn't get the Closing tween animation of door ${this._model.GetFullName()}`)
@@ -132,12 +136,13 @@ class DoorClass {
 		this._debounce = false
 		this._closed = true;
 
-		tween.Completed.Once(() => {
+		tween.Completed.Once(() => { // when door is fully closed
 			this._debounce = true;
 			this.clearTween();
 		});
 	}
 
+	// If door is opened when gets locked, it closes immediately
 	lock(): void {
 		this._locked = true;
 		if (!this._closed) this.close();
@@ -147,5 +152,3 @@ class DoorClass {
 		this._locked = false;
 	}
 }
-
-export = DoorClass;

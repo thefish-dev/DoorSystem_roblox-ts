@@ -61,6 +61,7 @@ local function OpenDoor(_, model)
 	local tween2 = TweenService:Create(door2, tweenInfo, goal2)
 	tween1:Play()
 	tween2:Play()
+	-- Returns tween1 to keep track of the door animation
 	return tween1
 end
 local function CloseDoor(_, model)

@@ -3,10 +3,10 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 -- eslint-disable prettier/prettier 
 local ReplicatedStorage = TS.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "services").ReplicatedStorage
 local GetAttribute = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "GetAttribute").GetAttribute
-local Constants = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorConfiguration").default
--- Interfaces
+local Constants = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorConfiguration").Constants
 -- Variables
 local DoorTweens = {}
+-- Main class
 local DoorClass
 do
 	DoorClass = setmetatable({}, {
@@ -82,6 +82,7 @@ do
 			self:clearTween()
 			return nil
 		end
+		-- Imports the DoorType module and starts opening tweens.
 		local doorModule = require(self:getModule())
 		local tween = doorModule:OpenDoor(self._model)
 		local _arg1 = "Couldn't get the Opening tween animation of door " .. self._model:GetFullName()
@@ -105,6 +106,7 @@ do
 			self:clearTween()
 			return nil
 		end
+		-- Imports the DoorType module and starts closing tweens.
 		local doorModule = require(self:getModule())
 		local tween = doorModule:CloseDoor(self._model)
 		local _arg1 = "Couldn't get the Closing tween animation of door " .. self._model:GetFullName()
@@ -127,4 +129,6 @@ do
 		self._locked = false
 	end
 end
-return DoorClass
+return {
+	DoorClass = DoorClass,
+}

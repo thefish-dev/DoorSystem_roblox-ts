@@ -2,16 +2,17 @@
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 -- eslint-disable prettier/prettier 
 local CollectionService = TS.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "services").CollectionService
-local DoorClass = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorClass")
-local Constants = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorConfiguration").default
 local GetAttribute = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "GetAttribute").GetAttribute
 local _HIDOperation = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "HIDOperation")
 local createButtons = _HIDOperation.createButtons
 local createScanners = _HIDOperation.createScanners
+local DoorClass = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorClass").DoorClass
+local Constants = TS.import(script, game:GetService("ReplicatedStorage"), "DoorSystem", "DoorConfiguration").Constants
 -- Variables
 local lockdown = false
 local doors = {}
--- Function
+-- Functions
+-- Returns the user's access level
 local function getPlayerAccess(player)
 	local permission = Constants.DEFAULT_ACCESS_LEVEL
 	local backpack = player:FindFirstChild("Backpack")
@@ -30,6 +31,7 @@ local function getPlayerAccess(player)
 	end
 	return permission
 end
+-- Main
 -- Lockdown button
 local _exp = CollectionService:GetTagged(Constants.LOCKDOWN_BUTTON_TAG)
 local _arg0 = function(button)
@@ -60,7 +62,7 @@ end
 for _k, _v in _exp do
 	_arg0(_v, _k - 1, _exp)
 end
--- Doors
+-- Doors handler
 local _exp_1 = CollectionService:GetTagged(Constants.DOOR_TAG)
 local _arg0_1 = function(door)
 	local doorClass = DoorClass.new(door)
