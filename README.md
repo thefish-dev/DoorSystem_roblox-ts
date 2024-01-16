@@ -1,4 +1,4 @@
-# DoorSystem_roblox-ts
+# DoorSystem in roblox-ts
 
 ### Fully customizable
 You can go ahead and edit the `DoorConfiguration` constants module at will !
